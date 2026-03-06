@@ -1,4 +1,5 @@
 import { hostname } from "node:os"
+import { DEFAULT_ENTITY_CONTEXT } from "./memory.ts"
 
 export type CaptureMode = "everything" | "all"
 
@@ -15,6 +16,7 @@ export type SupermemoryConfig = {
 	maxRecallResults: number
 	profileFrequency: number
 	captureMode: CaptureMode
+	entityContext: string
 	debug: boolean
 	enableCustomContainerTags: boolean
 	customContainers: CustomContainer[]
@@ -29,6 +31,7 @@ const ALLOWED_KEYS = [
 	"maxRecallResults",
 	"profileFrequency",
 	"captureMode",
+	"entityContext",
 	"debug",
 	"enableCustomContainerTags",
 	"customContainers",
@@ -117,6 +120,10 @@ export function parseConfig(raw: unknown): SupermemoryConfig {
 			cfg.captureMode === "everything"
 				? ("everything" as const)
 				: ("all" as const),
+		entityContext:
+			typeof cfg.entityContext === "string" && cfg.entityContext.trim()
+				? cfg.entityContext.trim()
+				: DEFAULT_ENTITY_CONTEXT,
 		debug: (cfg.debug as boolean) ?? false,
 		enableCustomContainerTags:
 			(cfg.enableCustomContainerTags as boolean) ?? false,
@@ -140,6 +147,7 @@ export const supermemoryConfigSchema = {
 			maxRecallResults: { type: "number" },
 			profileFrequency: { type: "number" },
 			captureMode: { type: "string", enum: ["all", "everything"] },
+			entityContext: { type: "string" },
 			debug: { type: "boolean" },
 			enableCustomContainerTags: { type: "boolean" },
 			customContainers: {

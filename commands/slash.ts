@@ -33,7 +33,7 @@ export function registerStubCommands(api: OpenClawPluginApi): void {
 export function registerCommands(
 	api: OpenClawPluginApi,
 	client: SupermemoryClient,
-	_cfg: SupermemoryConfig,
+	cfg: SupermemoryConfig,
 	getSessionKey: () => string | undefined,
 ): void {
 	api.registerCommand({
@@ -56,6 +56,8 @@ export function registerCommands(
 					text,
 					{ type: category, source: "openclaw_command" },
 					sk ? buildDocumentId(sk) : undefined,
+					undefined,
+					cfg.entityContext,
 				)
 
 				const preview = text.length > 60 ? `${text.slice(0, 60)}…` : text
@@ -81,7 +83,7 @@ export function registerCommands(
 			log.debug(`/recall command: "${query}"`)
 
 			try {
-				const results = await client.search(query, _cfg.maxRecallResults)
+				const results = await client.search(query, cfg.maxRecallResults)
 
 				if (results.length === 0) {
 					return { text: `No memories found for: "${query}"` }

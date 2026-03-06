@@ -1,7 +1,9 @@
 import type { SupermemoryClient } from "../client.ts"
 import type { SupermemoryConfig } from "../config.ts"
 import { log } from "../logger.ts"
-import { buildDocumentId, ENTITY_CONTEXT } from "../memory.ts"
+import { buildDocumentId } from "../memory.ts"
+
+const SKIPPED_PROVIDERS = ["exec-event", "cron-event", "heartbeat"]
 
 function getLastTurn(messages: unknown[]): unknown[] {
 	let lastUserIdx = -1
@@ -31,8 +33,8 @@ export function buildCaptureHandler(
 		log.info(
 			`agent_end fired: provider="${ctx.messageProvider}" success=${event.success}`,
 		)
-		const provider = ctx.messageProvider
-		if (provider === "exec-event" || provider === "cron-event") {
+		const provider = ctx.messageProvider as string
+		if (SKIPPED_PROVIDERS.includes(provider)) {
 			return
 		}
 
@@ -107,7 +109,7 @@ export function buildCaptureHandler(
 				{ source: "openclaw", timestamp: new Date().toISOString() },
 				customId,
 				undefined,
-				ENTITY_CONTEXT,
+				cfg.entityContext,
 			)
 		} catch (err) {
 			log.error("capture failed", err)

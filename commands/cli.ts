@@ -190,6 +190,17 @@ export function registerCliSetup(api: OpenClawPluginApi): void {
 						console.log("  Invalid value, using default: all")
 					}
 
+					console.log("\nEntity context:")
+					console.log(
+						"  Instructions that guide what memories are extracted from conversations.",
+					)
+					console.log(
+						"  Leave blank to use the built-in default (recommended for most users).",
+					)
+					const entityContextInput = await ask(
+						"Entity context (optional, press Enter for default): ",
+					)
+
 					console.log("\n--- Custom Container Tags (Advanced) ---")
 					console.log("Define custom containers for AI-driven memory routing.")
 					const enableCustomContainerTagsInput = await ask(
@@ -264,6 +275,8 @@ export function registerCliSetup(api: OpenClawPluginApi): void {
 					if (profileFrequency !== 50)
 						pluginConfig.profileFrequency = profileFrequency
 					if (captureMode !== "all") pluginConfig.captureMode = captureMode
+					if (entityContextInput.trim())
+						pluginConfig.entityContext = entityContextInput.trim()
 					if (enableCustomContainerTags)
 						pluginConfig.enableCustomContainerTags = true
 					if (customContainerInstructions.trim()) {
@@ -298,10 +311,20 @@ export function registerCliSetup(api: OpenClawPluginApi): void {
 					console.log(`  Max results:      ${maxRecallResults}`)
 					console.log(`  Profile freq:     ${profileFrequency}`)
 					console.log(`  Capture mode:     ${captureMode}`)
+					const entityPreview = entityContextInput.trim()
+					if (entityPreview) {
+						const truncated =
+							entityPreview.length > 50
+								? `${entityPreview.slice(0, 50)}...`
+								: entityPreview
+						console.log(`  Entity context:   "${truncated}"`)
+					} else {
+						console.log("  Entity context:   (default)")
+					}
 					console.log(
-						`  Custom containers: ${enableCustomContainerTags ? "enabled" : "disabled"}`,
+						`  Container tags:   ${enableCustomContainerTags ? "enabled" : "disabled"}`,
 					)
-					console.log(`  Custom containers: ${customContainers.length}`)
+					console.log(`  Container count:  ${customContainers.length}`)
 					if (customContainerInstructions.trim()) {
 						console.log(
 							`  Routing instructions: "${customContainerInstructions.trim().slice(0, 50)}${customContainerInstructions.length > 50 ? "..." : ""}"`,
@@ -381,10 +404,22 @@ export function registerCliSetup(api: OpenClawPluginApi): void {
 					console.log(
 						`  Capture mode:     ${pluginConfig.captureMode ?? "all"}`,
 					)
+					const entityCtx = pluginConfig.entityContext as
+						| string
+						| undefined
+					if (entityCtx) {
+						const truncated =
+							entityCtx.length > 50
+								? `${entityCtx.slice(0, 50)}...`
+								: entityCtx
+						console.log(`  Entity context:   "${truncated}"`)
+					} else {
+						console.log("  Entity context:   (default)")
+					}
 					console.log(
-						`  Custom containers: ${pluginConfig.enableCustomContainerTags ? "enabled" : "disabled"}`,
+						`  Container tags:   ${pluginConfig.enableCustomContainerTags ? "enabled" : "disabled"}`,
 					)
-					console.log(`  Custom containers: ${customContainers.length}`)
+					console.log(`  Container count:  ${customContainers.length}`)
 					console.log("")
 				})
 		},

@@ -13,7 +13,7 @@ import {
 export function registerStoreTool(
 	api: OpenClawPluginApi,
 	client: SupermemoryClient,
-	_cfg: SupermemoryConfig,
+	cfg: SupermemoryConfig,
 	getSessionKey: () => string | undefined,
 ): void {
 	api.registerTool(
@@ -48,6 +48,7 @@ export function registerStoreTool(
 					{ type: category, source: "openclaw_tool" },
 					customId,
 					params.containerTag,
+					cfg.entityContext,
 				)
 
 				const preview =
