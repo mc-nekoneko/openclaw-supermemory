@@ -1,0 +1,48 @@
+name: Publish to GitHub Packages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: publish-ghpkg
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          registry-url: 'https://npm.pkg.github.com'
+
+      - name: Rewrite package.json for scoped publish
+        run: |
+          UPSTREAM_VERSION=$(node -e "console.log(require('./package.json').version)")
+          SHORT_SHA=$(git rev-parse --short HEAD)
+          PATCHED_VERSION="${UPSTREAM_VERSION}-fork.${SHORT_SHA}"
+
+          node -e "
+            const pkg = require('./package.json');
+            pkg.name = '@mc-nekoneko/openclaw-supermemory';
+            pkg.version = '${PATCHED_VERSION}';
+            pkg.publishConfig = { registry: 'https://npm.pkg.github.com' };
+            delete pkg.peerDependencies;
+            require('fs').writeFileSync('./package.json', JSON.stringify(pkg, null, 2) + '\n');
+          "
+          echo "Publishing @mc-nekoneko/openclaw-supermemory@${PATCHED_VERSION}"
+
+      - name: Publish
+        run: npm publish --tag latest
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

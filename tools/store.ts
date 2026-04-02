@@ -23,10 +23,7 @@ export function registerStoreTool(
 			parameters: Type.Object({
 				text: Type.String({ description: "Information to remember" }),
 				category: Type.Optional(
-					Type.Unsafe<string>({
-						type: "string",
-						enum: [...MEMORY_CATEGORIES],
-					}),
+					Type.Unsafe<string>({ type: "string", enum: [...MEMORY_CATEGORIES] }),
 				),
 				containerTag: Type.Optional(
 					Type.String({

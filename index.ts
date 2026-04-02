@@ -1,3 +1,6 @@
+import fs from "node:fs"
+import os from "node:os"
+import path from "node:path"
 import type { OpenClawPluginApi } from "openclaw/plugin-sdk"
 import { SupermemoryClient } from "./client.ts"
 import { registerCli, registerCliSetup } from "./commands/cli.ts"
@@ -6,10 +9,21 @@ import { parseConfig, supermemoryConfigSchema } from "./config.ts"
 import { buildCaptureHandler } from "./hooks/capture.ts"
 import { buildRecallHandler } from "./hooks/recall.ts"
 import { initLogger } from "./logger.ts"
+import { buildMemoryRuntime, buildPromptSection } from "./runtime.ts"
 import { registerForgetTool } from "./tools/forget.ts"
 import { registerProfileTool } from "./tools/profile.ts"
 import { registerSearchTool } from "./tools/search.ts"
 import { registerStoreTool } from "./tools/store.ts"
+
+try {
+	const stateDir =
+		process.env.OPENCLAW_STATE_DIR || path.join(os.homedir(), ".openclaw")
+	const storePath = path.join(stateDir, "memory", "main.sqlite")
+	if (!fs.existsSync(storePath)) {
+		fs.mkdirSync(path.dirname(storePath), { recursive: true })
+		fs.writeFileSync(storePath, "")
+	}
+} catch {}
 
 export default {
 	id: "openclaw-supermemory",
@@ -34,6 +48,10 @@ export default {
 		}
 
 		const client = new SupermemoryClient(cfg.apiKey, cfg.containerTag)
+
+		api.registerMemoryRuntime?.(buildMemoryRuntime(client))
+		api.registerMemoryPromptSection?.(buildPromptSection)
+		api.registerMemoryFlushPlan?.(() => null)
 
 		let sessionKey: string | undefined
 		const getSessionKey = () => sessionKey

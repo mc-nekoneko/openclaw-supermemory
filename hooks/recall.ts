@@ -1,6 +1,7 @@
 import type { ProfileSearchResult, SupermemoryClient } from "../client.ts"
 import type { SupermemoryConfig } from "../config.ts"
 import { log } from "../logger.ts"
+import { stripInboundMetadata } from "../memory.ts"
 
 function formatRelativeTime(isoTimestamp: string): string {
 	try {
@@ -170,18 +171,22 @@ export function buildRecallHandler(
 		event: Record<string, unknown>,
 		ctx?: Record<string, unknown>,
 	) => {
-		const prompt = event.prompt as string | undefined
-		if (!prompt || prompt.length < 5) return
+		const rawPrompt = event.prompt as string | undefined
+		if (!rawPrompt || rawPrompt.length < 5) return
 
 		const messages = Array.isArray(event.messages) ? event.messages : []
 		const turn = countUserTurns(messages)
-		const includeProfile = turn <= 1 || turn % cfg.profileFrequency === 0
+		const isNewSession = turn === 0
+		const includeProfile = isNewSession || turn % cfg.profileFrequency === 0
 		const messageProvider = ctx?.messageProvider as string | undefined
+		const query = isNewSession ? undefined : stripInboundMetadata(rawPrompt)
 
-		log.debug(`recalling for turn ${turn} (profile: ${includeProfile})`)
+		log.debug(
+			`recalling for turn ${turn} (profile: ${includeProfile}, newSession: ${isNewSession})`,
+		)
 
 		try {
-			const profile = await client.getProfile(prompt)
+			const profile = await client.getProfile(query)
 			const memoryContext = formatContext(
 				includeProfile ? profile.static : [],
 				includeProfile ? profile.dynamic : [],

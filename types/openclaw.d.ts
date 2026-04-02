@@ -17,5 +17,11 @@ declare module "openclaw/plugin-sdk" {
 		registerService(service: any): void
 		// biome-ignore lint/suspicious/noExplicitAny: openclaw SDK does not ship types
 		on(event: string, handler: (...args: any[]) => any): void
+		// biome-ignore lint/suspicious/noExplicitAny: openclaw SDK does not ship types
+		registerMemoryRuntime?(runtime: any): void
+		// biome-ignore lint/suspicious/noExplicitAny: openclaw SDK does not ship types
+		registerMemoryPromptSection?(builder: any): void
+		// biome-ignore lint/suspicious/noExplicitAny: openclaw SDK does not ship types
+		registerMemoryFlushPlan?(resolver: any): void
 	}
 }

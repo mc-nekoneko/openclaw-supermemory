@@ -1,7 +1,7 @@
 import type { SupermemoryClient } from "../client.ts"
 import type { SupermemoryConfig } from "../config.ts"
 import { log } from "../logger.ts"
-import { buildDocumentId } from "../memory.ts"
+import { buildDocumentId, stripInboundMetadata } from "../memory.ts"
 
 const SKIPPED_PROVIDERS = ["exec-event", "cron-event", "heartbeat"]
 
@@ -71,7 +71,11 @@ export function buildCaptureHandler(
 			}
 
 			if (parts.length > 0) {
-				texts.push(`[role: ${role}]\n${parts.join("\n")}\n[${role}:end]`)
+				const cleaned =
+					role === "user"
+						? parts.map(stripInboundMetadata).join("\n")
+						: parts.join("\n")
+				texts.push(`[role: ${role}]\n${cleaned}\n[${role}:end]`)
 			}
 		}
 
