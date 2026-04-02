@@ -28,19 +28,25 @@ jobs:
 
       - name: Rewrite package.json for scoped publish
         run: |
-          UPSTREAM_VERSION=$(node -e "console.log(require('./package.json').version)")
-          SHORT_SHA=$(git rev-parse --short HEAD)
-          PATCHED_VERSION="${UPSTREAM_VERSION}-fork.${SHORT_SHA}"
+          PUBLISH_VERSION=$(node -e "
+            const pkg = require('./package.json');
+            const [major, minor, patch] = String(pkg.version).split('.').map(Number);
+            const runNumber = Number(process.env.GITHUB_RUN_NUMBER || 0);
+            if ([major, minor, patch].some(Number.isNaN)) {
+              throw new Error('Invalid upstream version: ' + pkg.version);
+            }
+            console.log(`${major}.${minor}.${patch * 1000 + runNumber}`);
+          ")
 
           node -e "
             const pkg = require('./package.json');
             pkg.name = '@mc-nekoneko/openclaw-supermemory';
-            pkg.version = '${PATCHED_VERSION}';
+            pkg.version = '${PUBLISH_VERSION}';
             pkg.publishConfig = { registry: 'https://npm.pkg.github.com' };
             delete pkg.peerDependencies;
             require('fs').writeFileSync('./package.json', JSON.stringify(pkg, null, 2) + '\n');
           "
-          echo "Publishing @mc-nekoneko/openclaw-supermemory@${PATCHED_VERSION}"
+          echo "Publishing @mc-nekoneko/openclaw-supermemory@${PUBLISH_VERSION}"
 
       - name: Publish
         run: npm publish --tag latest
