@@ -35,7 +35,7 @@ jobs:
             if ([major, minor, patch].some(Number.isNaN)) {
               throw new Error('Invalid upstream version: ' + pkg.version);
             }
-            console.log(`${major}.${minor}.${patch * 1000 + runNumber}`);
+            console.log([major, minor, patch * 1000 + runNumber].join('.'));
           ")
 
           node -e "
